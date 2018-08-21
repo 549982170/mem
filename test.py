@@ -2,7 +2,7 @@
 # !/user/bin/python
 """缓存测试"""
 import time
-from dbfornt import member
+from dbfront import member
 
 
 # 连接缓存
