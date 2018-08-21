@@ -1,9 +1,4 @@
 # coding:utf8
-'''
-Created on 2013-5-8
-
-@author: lan (www.9miao.com)
-'''
 
 import logging
 import time
@@ -13,7 +8,6 @@ from memclient import mclient
 from memobject import MemObject
 from rdsclient import rdsclient
 import util
-
 
 logger = logging.getLogger()
 
@@ -144,26 +138,26 @@ class MMode(MemObject):
             props = self.get('data')
             pk = self.get('_pk')
             util.InsertIntoDB(tablename, props)
-#             result = util.InsertIntoDB(tablename, props)
+        #             result = util.InsertIntoDB(tablename, props)
         elif state == MMODE_STATE_UPDATE:
             props = self.get('data')
             pk = self.get('_pk')
             prere = {pk: props.get(pk)}
             util.UpdateWithDict(tablename, props, prere)
-#             result = True
+        #             result = True
         else:
             pk = self.get('_pk')
             props = self.get('data')
             if props:
                 prere = {pk: props.get(pk)}
                 util.DeleteFromDB(tablename, prere)
-    #             result = util.DeleteFromDB(tablename, prere)
+                #             result = util.DeleteFromDB(tablename, prere)
                 self.mdelete()
             else:
                 logging.error('syncDB pk:%s is not data' % str(pk))
 
-#         logger.debug('syncDB,tbname:%s,%s:%s' %(tablename, pk, props.get(pk)))
-#         if result:  平台缺陷，2014-6-20修改 http://bbs.9miao.com/thread-49154-1-1.html
+        #         logger.debug('syncDB,tbname:%s,%s:%s' %(tablename, pk, props.get(pk)))
+        #         if result:  平台缺陷，2014-6-20修改 http://bbs.9miao.com/thread-49154-1-1.html
         if state != MMODE_STATE_DEL:
             MemObject.update(self, '_state', MMODE_STATE_ORI)
 
@@ -242,26 +236,26 @@ class MAdmin(MemObject):
         fkmm.insert()
         return list(set(dbkeylist))
 
-#         name = '%s_fk:%s' % (self._name, fk)
-#         fkmm = MFKMode(name)
-#         pklist = fkmm.get('pklist')
-#         props = {self._fk:fk}
-#         dbkeylist = util.getAllPkByFkInDB(self._name, self._pk, props)
-#         if pklist is not None:
-#             pkset = set(pklist)
-#             dbkeyset = set(dbkeylist)
-#             morekey = dbkeyset-pkset
-#             if morekey:
-#                 map(lambda x: pkset.add(x) if self.getObj(x) else "", morekey)  # 修复主键丢失bug by y_zw
-#                 rep_klist = list(pkset)
-#                 fkmm = MFKMode(name)
-#                 pklist = fkmm.get('pklist')
-#                 fkmm.update('pklist', rep_klist)
-#             return list(pkset)
-#         name = '%s_fk:%s' % (self._name, fk)
-#         fkmm = MFKMode(name, pklist=dbkeylist)
-#         fkmm.insert()
-#         return list(set(dbkeylist))
+    #         name = '%s_fk:%s' % (self._name, fk)
+    #         fkmm = MFKMode(name)
+    #         pklist = fkmm.get('pklist')
+    #         props = {self._fk:fk}
+    #         dbkeylist = util.getAllPkByFkInDB(self._name, self._pk, props)
+    #         if pklist is not None:
+    #             pkset = set(pklist)
+    #             dbkeyset = set(dbkeylist)
+    #             morekey = dbkeyset-pkset
+    #             if morekey:
+    #                 map(lambda x: pkset.add(x) if self.getObj(x) else "", morekey)  # 修复主键丢失bug by y_zw
+    #                 rep_klist = list(pkset)
+    #                 fkmm = MFKMode(name)
+    #                 pklist = fkmm.get('pklist')
+    #                 fkmm.update('pklist', rep_klist)
+    #             return list(pkset)
+    #         name = '%s_fk:%s' % (self._name, fk)
+    #         fkmm = MFKMode(name, pklist=dbkeylist)
+    #         fkmm.insert()
+    #         return list(set(dbkeylist))
 
     def addFK(self, fk, pk):
         """根据外键增加主键,防止主键列表丢失"""
