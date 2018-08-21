@@ -34,8 +34,6 @@ DBCS = {'mysql': MySQLdb, }
 class DBPool(object):
 
     def initPool(self, dbcfg):
-
-        self.config = {}
         self.config = dbcfg
         creator = DBCS.get(dbcfg.get('engine', 'mysql'), MySQLdb)
         self.pool = PooledDB(creator, 5, **dbcfg)  # 2为连接池里的最少连接数

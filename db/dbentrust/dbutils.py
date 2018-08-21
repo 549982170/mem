@@ -1,9 +1,4 @@
-#coding:utf8
-'''
-Created on 2013-8-21
-
-@author: lan (www.9miao.com)
-'''
+# coding:utf8
 import itertools
 import datetime
 
@@ -30,7 +25,8 @@ def safeunicode(obj, encoding='utf-8'):
         return unicode(obj)
     else:
         return str(obj).decode(encoding)
-    
+
+
 def safestr(obj, encoding='utf-8'):
     r"""
     Converts any given object to utf-8 encoded string. 
@@ -46,12 +42,13 @@ def safestr(obj, encoding='utf-8'):
         return obj.encode(encoding)
     elif isinstance(obj, str):
         return obj
-    elif hasattr(obj, 'next'): # iterator
+    elif hasattr(obj, 'next'):  # iterator
         return itertools.imap(safestr, obj)
     else:
         return str(obj)
-    
-def sqlify(obj): 
+
+
+def sqlify(obj):
     """
     converts `obj` to its proper SQL version
 
@@ -76,8 +73,9 @@ def sqlify(obj):
     else:
         if isinstance(obj, unicode): obj = obj.encode('utf8')
         return repr(obj)
-    
-def sqllist(lst): 
+
+
+def sqllist(lst):
     """
     Converts the arguments for use in something like a WHERE clause.
     
@@ -88,11 +86,12 @@ def sqllist(lst):
         >>> sqllist(u'abc')
         u'abc'
     """
-    if isinstance(lst, basestring): 
+    if isinstance(lst, basestring):
         return lst
     else:
         return ', '.join(lst)
-    
+
+
 def _sqllist(values):
     """
         >>> _sqllist([1, 2, 3])
@@ -106,8 +105,9 @@ def _sqllist(values):
         items.append(sqlparam(v))
     items.append(')')
     return SQLQuery(items)
-    
-def sqlquote(a): 
+
+
+def sqlquote(a):
     """
     Ensures `a` is quoted properly for use in a SQL query.
 
@@ -120,8 +120,9 @@ def sqlquote(a):
         return _sqllist(a)
     else:
         return sqlparam(a).sqlquery()
-    
-def _interpolate(sformat): 
+
+
+def _interpolate(sformat):
     """
     Takes a format string and returns a list of 2-tuples of the form
     (boolean, string) where boolean says whether string should be evaled
@@ -130,7 +131,7 @@ def _interpolate(sformat):
     from <http://lfw.org/python/Itpl.py> (public domain, Ka-Ping Yee)
     """
     from tokenize import tokenprog
-    
+
     tokenprog = tokenprog
 
     def matchorfail(text, pos):
@@ -140,13 +141,13 @@ def _interpolate(sformat):
         return match, match.end()
 
     namechars = "abcdefghijklmnopqrstuvwxyz" \
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_";
+                "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_";
     chunks = []
     pos = 0
 
     while 1:
         dollar = sformat.find("$", pos)
-        if dollar < 0: 
+        if dollar < 0:
             break
         nextchar = sformat[dollar + 1]
 
@@ -157,9 +158,9 @@ def _interpolate(sformat):
                 match, pos = matchorfail(sformat, pos)
                 tstart, tend = match.regs[3]
                 token = sformat[tstart:tend]
-                if token == "{": 
+                if token == "{":
                     level = level + 1
-                elif token == "}":  
+                elif token == "}":
                     level = level - 1
             chunks.append((1, sformat[dollar + 2:pos - 1]))
 
@@ -168,7 +169,7 @@ def _interpolate(sformat):
             match, pos = matchorfail(sformat, dollar + 1)
             while pos < len(sformat):
                 if sformat[pos] == "." and \
-                    pos + 1 < len(sformat) and sformat[pos + 1] in namechars:
+                        pos + 1 < len(sformat) and sformat[pos + 1] in namechars:
                     match, pos = matchorfail(sformat, pos + 1)
                 elif sformat[pos] in "([":
                     pos, level = pos + 1, 1
@@ -176,22 +177,23 @@ def _interpolate(sformat):
                         match, pos = matchorfail(sformat, pos)
                         tstart, tend = match.regs[3]
                         token = sformat[tstart:tend]
-                        if token[0] in "([": 
+                        if token[0] in "([":
                             level = level + 1
-                        elif token[0] in ")]":  
+                        elif token[0] in ")]":
                             level = level - 1
-                else: 
+                else:
                     break
             chunks.append((1, sformat[dollar + 1:pos]))
         else:
             chunks.append((0, sformat[pos:dollar + 1]))
             pos = dollar + 1 + (nextchar == "$")
 
-    if pos < len(sformat): 
+    if pos < len(sformat):
         chunks.append((0, sformat[pos:]))
     return chunks
 
-def sqlwhere(dictionary, grouping=' AND '): 
+
+def sqlwhere(dictionary, grouping=' AND '):
     """
     Converts a `dictionary` to an SQL WHERE clause `SQLQuery`.
     
@@ -203,8 +205,9 @@ def sqlwhere(dictionary, grouping=' AND '):
         'a = %s AND b = %s'
     """
     return SQLQuery.join([k + ' = ' + sqlparam(v) for k, v in dictionary.items()], grouping)
-    
-def reparam(string_, dictionary): 
+
+
+def reparam(string_, dictionary):
     """
     Takes a string and a dictionary and interpolates the string
     using values from the dictionary. Returns an `SQLQuery` for the result.
@@ -214,17 +217,18 @@ def reparam(string_, dictionary):
         >>> reparam("s IN $s", dict(s=[1, 2]))
         <sql: 's IN (1, 2)'>
     """
-    dictionary = dictionary.copy() # eval mucks with it
+    dictionary = dictionary.copy()  # eval mucks with it
     result = []
     for live, chunk in _interpolate(string_):
         if live:
             v = eval(chunk, dictionary)
             result.append(sqlquote(v))
-        else: 
+        else:
             result.append(chunk)
     return SQLQuery.join(result, '')
 
-class UnknownParamstyle(Exception): 
+
+class UnknownParamstyle(Exception):
     """
     raised for unsupported db paramstyles
 
@@ -232,14 +236,17 @@ class UnknownParamstyle(Exception):
     """
     pass
 
-class _ItplError(ValueError): 
+
+class _ItplError(ValueError):
     def __init__(self, text, pos):
         ValueError.__init__(self)
         self.text = text
         self.pos = pos
+
     def __str__(self):
         return "unfinished expression in %s at char %d" % (
             repr(self.text), self.pos)
+
 
 class SQLParam(object):
     """
@@ -257,7 +264,7 @@ class SQLParam(object):
 
     def __init__(self, value):
         self.value = value
-        
+
     def get_marker(self, paramstyle='pyformat'):
         if paramstyle == 'qmark':
             return '?'
@@ -266,23 +273,25 @@ class SQLParam(object):
         elif paramstyle is None or paramstyle in ['format', 'pyformat']:
             return '%s'
         raise UnknownParamstyle, paramstyle
-        
-    def sqlquery(self): 
+
+    def sqlquery(self):
         return SQLQuery([self])
-        
+
     def __add__(self, other):
         return self.sqlquery() + other
-        
+
     def __radd__(self, other):
-        return other + self.sqlquery() 
-            
-    def __str__(self): 
+        return other + self.sqlquery()
+
+    def __str__(self):
         return str(self.value)
-    
+
     def __repr__(self):
         return '<param: %s>' % repr(self.value)
 
-sqlparam =  SQLParam
+
+sqlparam = SQLParam
+
 
 class SQLQuery(object):
     """
@@ -319,7 +328,7 @@ class SQLQuery(object):
             self.items = list(items.items)
         else:
             self.items = [items]
-            
+
         # Take care of SQLLiterals
         for i, item in enumerate(self.items):
             if isinstance(item, SQLParam) and isinstance(item.value, SQLLiteral):
@@ -342,7 +351,7 @@ class SQLQuery(object):
             items = [other]
         else:
             return NotImplemented
-            
+
         return SQLQuery(items + self.items)
 
     def __iadd__(self, other):
@@ -356,7 +365,7 @@ class SQLQuery(object):
 
     def __len__(self):
         return len(self.query())
-        
+
     def query(self, paramstyle=None):
         """
         Returns the query part of the sql query.
@@ -380,7 +389,7 @@ class SQLQuery(object):
                         x = x.replace('%', '%%')
                 s.append(x)
         return "".join(s)
-    
+
     def values(self):
         """
         Returns the values of the parameters used in the sql query.
@@ -389,7 +398,7 @@ class SQLQuery(object):
             ['joe']
         """
         return [i.value for i in self.items if isinstance(i, SQLParam)]
-        
+
     def join(items, sep=' ', prefix=None, suffix=None, target=None):
         """
         Joins multiple queries.
@@ -423,25 +432,26 @@ class SQLQuery(object):
         if suffix:
             target_items.append(suffix)
         return target
-    
+
     join = staticmethod(join)
-    
+
     def _str(self):
         try:
-            return self.query() % tuple([sqlify(x) for x in self.values()])            
+            return self.query() % tuple([sqlify(x) for x in self.values()])
         except (ValueError, TypeError):
             return self.query()
-        
+
     def __str__(self):
         return safestr(self._str())
-        
+
     def __unicode__(self):
         return safeunicode(self._str())
 
     def __repr__(self):
         return '<sql: %s>' % repr(str(self))
-    
-class SQLLiteral: 
+
+
+class SQLLiteral:
     """
     Protects a string from `sqlquote`.
 
@@ -450,20 +460,23 @@ class SQLLiteral:
         >>> sqlquote(SQLLiteral('NOW()'))
         <sql: 'NOW()'>
     """
-    def __init__(self, v): 
+
+    def __init__(self, v):
         self.v = v
 
-    def __repr__(self): 
+    def __repr__(self):
         return self.v
 
-class SQLProducer: 
+
+class SQLProducer:
     """Database"""
+
     def __init__(self):
         """Creates a database.
         """
         pass
-    
-    def query(self, sql_query,processed=False, svars=None): 
+
+    def query(self, sql_query, processed=False, svars=None):
         """
         Execute SQL query `sql_query` using dictionary `vars` to interpolate it.
         If `processed=True`, `vars` is a `reparam`-style list to use 
@@ -479,13 +492,13 @@ class SQLProducer:
         """
         if svars is None:
             svars = {}
-            
+
         if not processed and not isinstance(sql_query, SQLQuery):
             sql_query = reparam(sql_query, svars)
-            
+
         return sql_query
-    
-    def sql_clauses(self, what, tables, where, group, order, limit, offset): 
+
+    def sql_clauses(self, what, tables, where, group, order, limit, offset):
         return (
             ('SELECT', what),
             ('FROM', sqllist(tables)),
@@ -494,28 +507,30 @@ class SQLProducer:
             ('ORDER BY', order),
             ('LIMIT', limit),
             ('OFFSET', offset))
-    
-    def gen_clause(self, sql, val, svars): 
+
+    def gen_clause(self, sql, val, svars):
         if isinstance(val, (int, long)):
             if sql == 'WHERE':
                 nout = 'id = ' + sqlquote(val)
             else:
                 nout = SQLQuery(val)
-                
+
         elif isinstance(val, (list, tuple)) and len(val) == 2:
-            nout = SQLQuery(val[0], val[1]) # backwards-compatibility
+            nout = SQLQuery(val[0], val[1])  # backwards-compatibility
         elif isinstance(val, SQLQuery):
             nout = val
         else:
             nout = reparam(val, svars)
 
         def xjoin(a, b):
-            if a and b: return a + ' ' + b
-            else: return a or b
+            if a and b:
+                return a + ' ' + b
+            else:
+                return a or b
 
         return xjoin(sql, nout)
-    
-    def _where(self, where, svars): 
+
+    def _where(self, where, svars):
         if isinstance(where, (int, long)):
             where = "id = " + sqlparam(where)
         elif isinstance(where, (list, tuple)) and len(where) == 2:
@@ -523,11 +538,11 @@ class SQLProducer:
         elif isinstance(where, SQLQuery):
             pass
         else:
-            where = reparam(where, svars)        
+            where = reparam(where, svars)
         return where
-    
-    def select(self, tables, svars=None, what='*', where=None, order=None, group=None, 
-               limit=None, offset=None, _test=False): 
+
+    def select(self, tables, svars=None, what='*', where=None, order=None, group=None,
+               limit=None, offset=None, _test=False):
         """
         Selects `what` from `tables` with clauses `where`, `order`, 
         `group`, `limit`, and `offset`. Uses vars to interpolate. 
@@ -546,7 +561,7 @@ class SQLProducer:
         if _test: return qout
         return self.query(qout, processed=True)
 
-    def insert(self, tablename, seqname=None, _test=False, **values): 
+    def insert(self, tablename, seqname=None, _test=False, **values):
         """
         Inserts `values` into `tablename`. Returns current sequence ID.
         Set `seqname` to the ID if it's not the default, or to `False`
@@ -561,8 +576,10 @@ class SQLProducer:
             >>> q.values()
             [2, 'bob']
         """
-        def q(x): return "(" + x + ")"
-        
+
+        def q(x):
+            return "(" + x + ")"
+
         if values:
             _keys = SQLQuery.join(values.keys(), ', ')
             _values = SQLQuery.join([sqlparam(v) for v in values.values()], ', ')
@@ -571,7 +588,7 @@ class SQLProducer:
             sql_query = SQLQuery(self._get_insert_default_values_query(tablename))
 
         return sql_query
-        
+
     def _get_insert_default_values_query(self, table):
         return "INSERT INTO %s DEFAULT VALUES" % table
 
@@ -588,19 +605,19 @@ class SQLProducer:
             >>> values = [{"name": "foo", "email": "foo@example.com"}, {"name": "bar", "email": "bar@example.com"}]
             >>> db.multiple_insert('person', values=values, _test=True)
             <sql: "INSERT INTO person (name, email) VALUES ('foo', 'foo@example.com'), ('bar', 'bar@example.com')">
-        """        
+        """
         if not values:
             return []
-            
+
         if not self.supports_multiple_insert:
             out = [self.insert(tablename, seqname=seqname, _test=_test, **v) for v in values]
             if seqname is False:
                 return None
             else:
                 return out
-                
+
         keys = values[0].keys()
-        #@@ make sure all keys are valid
+        # @@ make sure all keys are valid
 
         # make sure all rows have same keys.
         for v in values:
@@ -613,11 +630,11 @@ class SQLProducer:
             if i != 0:
                 sql_query.append(", ")
             SQLQuery.join([SQLParam(row[k]) for k in keys], sep=", ", target=sql_query, prefix="(", suffix=")")
-        
+
         if _test: return sql_query
 
         db_cursor = self._db_cursor()
-        if seqname is not False: 
+        if seqname is not False:
             sql_query = self._process_insert_query(sql_query, tablename, seqname)
 
         if isinstance(sql_query, tuple):
@@ -629,18 +646,17 @@ class SQLProducer:
         else:
             self._db_execute(db_cursor, sql_query)
 
-        try: 
+        try:
             out = db_cursor.fetchone()[0]
-            out = range(out-len(values)+1, out+1)        
-        except Exception: 
+            out = range(out - len(values) + 1, out + 1)
+        except Exception:
             out = None
 
-        if not self.ctx.transactions: 
+        if not self.ctx.transactions:
             self.ctx.commit()
         return out
 
-    
-    def update(self, tables, where, svars=None, _test=False, **values): 
+    def update(self, tables, where, svars=None, _test=False, **values):
         """
         Update `tables` with clause `where` (interpolated using `vars`)
         and setting `values`.
@@ -660,19 +676,19 @@ class SQLProducer:
         where = self._where(where, svars)
 
         query = (
-          "UPDATE " + sqllist(tables) + 
-          " SET " + sqlwhere(values, ', ') + 
-          " WHERE " + where)
+                "UPDATE " + sqllist(tables) +
+                " SET " + sqlwhere(values, ', ') +
+                " WHERE " + where)
 
         if _test: return query
-        
+
         db_cursor = self._db_cursor()
         self._db_execute(db_cursor, query)
-        if not self.ctx.transactions: 
+        if not self.ctx.transactions:
             self.ctx.commit()
         return db_cursor.rowcount
-    
-    def delete(self, table, where, using=None, svars=None, _test=False): 
+
+    def delete(self, table, where, using=None, svars=None, _test=False):
         """
         Deletes from `table` with clauses `where` and `using`.
 
@@ -692,7 +708,6 @@ class SQLProducer:
             q += ' WHERE ' + where
 
         return q
-    
-sqlproducer = SQLProducer()
 
-    
+
+sqlproducer = SQLProducer()
