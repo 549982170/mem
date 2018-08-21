@@ -1,2 +1,2 @@
 # memcache
-redis+memcahce高效轮训缓存
+redis+memcahce高效轮询缓存
